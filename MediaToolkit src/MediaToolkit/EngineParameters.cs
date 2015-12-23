@@ -3,7 +3,7 @@ namespace MediaToolkit
     using MediaToolkit.Model;
     using MediaToolkit.Options;
     using MediaToolkit.Util;
-
+    using System.Collections.Generic;
     /// -------------------------------------------------------------------------------------------------
     /// <summary>   Configures the engine to perform the correct task. </summary>
     internal class EngineParameters
@@ -37,5 +37,7 @@ namespace MediaToolkit
         /// <summary>   Gets or sets the task. </summary>
         /// <value> The task. </value>
         internal FFmpegTask Task { get; set; }
+
+        internal List<MediaFile> ConcatFiles { get; set; }
     }
 }

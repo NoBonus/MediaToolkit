@@ -118,12 +118,29 @@
 
             this.FFmpegEngine(engineParams);
         }
+        /// -------------------------------------------------------------------------------------------------
+        /// <summary>  Concatenate a list of video file into one. </summary>
+        /// <param name="concatFiles">  List of media files. </param>
+        /// <param name="outputFile">   Concatenated output media. </param>
+        /// <param name="options">      Conversion options. </param>
+        public void Concatenate(List<MediaFile> concatFiles, MediaFile outputFile, ConversionOptions options)
+        {
+            EngineParameters engineParams = new EngineParameters
+            {
+                ConcatFiles = concatFiles,
+                OutputFile = outputFile,
+                ConversionOptions = options,
+                Task = FFmpegTask.Concatenate
+            };
+
+            this.FFmpegEngine(engineParams);
+        }
         
         #region Private method - Helpers
 
         private void FFmpegEngine(EngineParameters engineParameters)
         {
-            if (!engineParameters.InputFile.Filename.StartsWith("http://") && !File.Exists(engineParameters.InputFile.Filename))
+            if (engineParameters.Task!=FFmpegTask.Concatenate&& !engineParameters.InputFile.Filename.StartsWith("http://") && !File.Exists(engineParameters.InputFile.Filename))
             {
                 throw new FileNotFoundException(Resources.Exception_Media_Input_File_Not_Found, engineParameters.InputFile.Filename);
             }
@@ -143,7 +160,7 @@
         {
             string arguments = CommandBuilder.Serialize(engineParameters);
 
-            return this.GenerateStartInfo(arguments);
+            return GenerateStartInfo(arguments);
         }
 
         private ProcessStartInfo GenerateStartInfo(string arguments)

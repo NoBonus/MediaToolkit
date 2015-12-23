@@ -21,8 +21,25 @@ namespace MediaToolkit
 
                 case FFmpegTask.GetThumbnail:
                     return GetThumbnail(engineParameters.InputFile, engineParameters.OutputFile, engineParameters.ConversionOptions);
+                case FFmpegTask.Concatenate:
+                    return Concatenate(engineParameters);
             }
             return null;
+        }
+
+        private static string Concatenate(EngineParameters engineParameters)
+        {
+            var commandBuilder = new StringBuilder();
+            var outputFile = engineParameters.OutputFile;
+            string filelist = "";
+            foreach(MediaFile mf in engineParameters.ConcatFiles)
+            {
+                filelist += "file '" + mf.Filename + "'" + Environment.NewLine;
+            }
+            string listfilename = System.IO.Path.GetTempFileName();
+            System.IO.File.WriteAllText(listfilename, filelist);
+            commandBuilder.AppendFormat("-f concat -i \"{0}\" -c copy ", listfilename);
+            return commandBuilder.AppendFormat(" \"{0}\" ", outputFile.Filename).ToString();
         }
 
         private static string GetMetadata(MediaFile inputFile)
