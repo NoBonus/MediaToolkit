@@ -29,10 +29,26 @@ namespace MediaToolkit
 
         private static string Concatenate(EngineParameters engineParameters)
         {
+            bool sameCodec = true;
+            var lastformat = "";
+            foreach(MediaFile mf in engineParameters.ConcatFiles)
+            {
+                if(!String.IsNullOrEmpty(lastformat)&& lastformat!= mf.Metadata.VideoData.Format)
+                {
+                    sameCodec = false;
+                    break;
+                }
+                lastformat=mf.Metadata.VideoData.Format;
+            }
+            //sameCodec = false;
+            return sameCodec ? ConcatenateDemux(engineParameters) : ConcatenateFilter(engineParameters);
+        }
+        private static string ConcatenateDemux(EngineParameters engineParameters)
+        {
             var commandBuilder = new StringBuilder();
             var outputFile = engineParameters.OutputFile;
             string filelist = "";
-            foreach(MediaFile mf in engineParameters.ConcatFiles)
+            foreach (MediaFile mf in engineParameters.ConcatFiles)
             {
                 filelist += "file '" + mf.Filename + "'" + Environment.NewLine;
             }
@@ -41,7 +57,23 @@ namespace MediaToolkit
             commandBuilder.AppendFormat("-f concat -i \"{0}\" -c copy ", listfilename);
             return commandBuilder.AppendFormat(" \"{0}\" ", outputFile.Filename).ToString();
         }
-
+        private static string ConcatenateFilter(EngineParameters engineParameters)
+        {
+            var commandBuilder = new StringBuilder();
+            var outputFile = engineParameters.OutputFile;
+            string filelist = "";
+            string filter = "-filter_complex \"";
+            int vidx = 0;
+            foreach (MediaFile mf in engineParameters.ConcatFiles)
+            {
+                filelist += "-i \"" + mf.Filename + "\" " ;
+                filter += string.Format("[{0}:v:0] [{0}:a:0] ", vidx);
+                vidx++;
+            }
+            filter += string.Format("concat=n={0}:v=1:a=1 [v] [a]\"", vidx);
+            commandBuilder.AppendFormat("{0} {1} -map \"[v]\" -map \"[a]\" ", filelist,filter);
+            return commandBuilder.AppendFormat(" \"{0}\" ", outputFile.Filename).ToString();
+        }
         private static string GetMetadata(MediaFile inputFile)
         {
             return string.Format("-i \"{0}\" ", inputFile.Filename);
